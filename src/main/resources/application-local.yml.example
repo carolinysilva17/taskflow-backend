@@ -1,0 +1,10 @@
+# Copy to application-local.yml (gitignored) and fill in real values,
+# or export these as environment variables instead.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/taskflow
+    username: taskflow
+    password: taskflow
+
+jwt:
+  secret: change-me
