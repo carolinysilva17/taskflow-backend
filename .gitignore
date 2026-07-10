@@ -1,5 +1,8 @@
 target/
 
+# Local secrets, never commit
+application-local.yml
+
 # Compiled class file
 *.class
 
