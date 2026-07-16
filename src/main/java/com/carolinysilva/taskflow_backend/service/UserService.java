@@ -19,16 +19,23 @@ public class UserService {
     }
 
     public User register(String name, String email, String rawPassword) {
-        if (userRepository.findByEmail(email).isPresent()) {
-            throw new BusinessRuleException("E-mail já está em uso: " + email);
+        String normalizedEmail = normalizeEmail(email);
+
+        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
+            throw new BusinessRuleException("E-mail já está em uso: " + normalizedEmail);
         }
 
-        User user = new User(name, email, passwordEncoder.encode(rawPassword));
+        User user = new User(name.trim(), normalizedEmail, passwordEncoder.encode(rawPassword));
         return userRepository.save(user);
     }
 
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado para o e-mail: " + email));
+        String normalizedEmail = normalizeEmail(email);
+        return userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado para o e-mail: " + normalizedEmail));
+    }
+
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase();
     }
 }

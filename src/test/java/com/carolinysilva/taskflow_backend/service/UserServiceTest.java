@@ -15,6 +15,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -59,5 +60,27 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.findByEmail("nao-existe@teste.com"))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void register_deveNormalizarEmail_quandoEmailComEspacoOuMaiuscula() {
+        userService = new UserService(userRepository, passwordEncoder);
+        when(userRepository.findByEmail("carol@teste.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(anyString())).thenReturn("hash-gerado");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User result = userService.register("Carol", "  Carol@Teste.com  ", "minhaSenha123");
+
+        assertThat(result.getEmail()).isEqualTo("carol@teste.com");
+    }
+
+    @Test
+    void register_deveLancarExcecao_quandoEmailJaExisteComCasingDiferente() {
+        userService = new UserService(userRepository, passwordEncoder);
+        when(userRepository.findByEmail("carol@teste.com"))
+                .thenReturn(Optional.of(new User("Carol", "carol@teste.com", "hash")));
+
+        assertThatThrownBy(() -> userService.register("Carol", "CAROL@TESTE.COM", "minhaSenha123"))
+                .isInstanceOf(BusinessRuleException.class);
     }
 }
