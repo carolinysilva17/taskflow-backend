@@ -202,4 +202,11 @@ class AuthControllerTest {
         mockMvc.perform(post("/auth/refresh").cookie(new Cookie("refreshToken", tokenExpirado)))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void logout_deveLimparCookieRefreshToken_mesmoSemCookiePresente() throws Exception {
+        mockMvc.perform(post("/auth/logout"))
+                .andExpect(status().isOk())
+                .andExpect(cookie().maxAge("refreshToken", 0));
+    }
 }

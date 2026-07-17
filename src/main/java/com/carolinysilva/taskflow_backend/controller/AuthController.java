@@ -60,7 +60,7 @@ public class AuthController {
         AuthService.TokenPair tokenPair = authService.login(request.email(), request.password());
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokenPair.refreshToken()).toString())
+                .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokenPair.refreshToken(), refreshTokenExpirationMs).toString())
                 .body(new LoginResponse(tokenPair.accessToken(), UserResponse.from(tokenPair.user())));
     }
 
@@ -70,17 +70,24 @@ public class AuthController {
         AuthService.TokenPair tokenPair = authService.refresh(refreshToken);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokenPair.refreshToken()).toString())
+                .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokenPair.refreshToken(), refreshTokenExpirationMs).toString())
                 .body(new RefreshResponse(tokenPair.accessToken()));
     }
 
-    private ResponseCookie buildRefreshCookie(String refreshToken) {
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, buildRefreshCookie("", 0).toString())
+                .build();
+    }
+
+    private ResponseCookie buildRefreshCookie(String refreshToken, long maxAgeMs) {
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE, refreshToken)
                 .httpOnly(true)
                 .secure(refreshCookieSecure)
                 .sameSite(refreshCookieSameSite)
                 .path("/auth")
-                .maxAge(Duration.ofMillis(refreshTokenExpirationMs))
+                .maxAge(Duration.ofMillis(maxAgeMs))
                 .build();
     }
 }
