@@ -23,7 +23,7 @@ public class UserService {
         String normalizedEmail = EmailNormalizer.normalize(email);
 
         if (userRepository.findByEmail(normalizedEmail).isPresent()) {
-            throw new BusinessRuleException("E-mail já está em uso: " + normalizedEmail);
+            throw new BusinessRuleException("EMAIL_ALREADY_IN_USE", "E-mail já está em uso: " + normalizedEmail);
         }
 
         User user = new User(name.trim(), normalizedEmail, passwordEncoder.encode(rawPassword));
@@ -33,6 +33,7 @@ public class UserService {
     public User findByEmail(String email) {
         String normalizedEmail = EmailNormalizer.normalize(email);
         return userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado para o e-mail: " + normalizedEmail));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "USER_NOT_FOUND", "Usuário não encontrado para o e-mail: " + normalizedEmail));
     }
 }

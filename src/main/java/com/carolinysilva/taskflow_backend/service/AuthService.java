@@ -26,10 +26,10 @@ public class AuthService {
         String normalizedEmail = EmailNormalizer.normalize(email);
 
         User user = userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new InvalidCredentialsException("E-mail ou senha inválidos"));
+                .orElseThrow(() -> new InvalidCredentialsException("INVALID_CREDENTIALS", "E-mail ou senha inválidos"));
 
         if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
-            throw new InvalidCredentialsException("E-mail ou senha inválidos");
+            throw new InvalidCredentialsException("INVALID_CREDENTIALS", "E-mail ou senha inválidos");
         }
 
         String accessToken = jwtService.generateAccessToken(user.getEmail());
@@ -41,12 +41,12 @@ public class AuthService {
         if (refreshToken == null || refreshToken.isBlank()
                 || !jwtService.isTokenValid(refreshToken)
                 || !jwtService.isRefreshToken(refreshToken)) {
-            throw new InvalidTokenException("Refresh token inválido ou expirado");
+            throw new InvalidTokenException("INVALID_REFRESH_TOKEN", "Refresh token inválido ou expirado");
         }
 
         String email = jwtService.extractSubject(refreshToken);
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new InvalidTokenException("Refresh token inválido ou expirado"));
+                .orElseThrow(() -> new InvalidTokenException("INVALID_REFRESH_TOKEN", "Refresh token inválido ou expirado"));
 
         String newAccessToken = jwtService.generateAccessToken(user.getEmail());
         String newRefreshToken = jwtService.generateRefreshToken(user.getEmail());
