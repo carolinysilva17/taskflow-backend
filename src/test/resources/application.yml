@@ -15,3 +15,5 @@ jwt:
   secret: ${JWT_SECRET:test-secret-key-with-at-least-32-characters-long}
   access-token-expiration-ms: 900000
   refresh-token-expiration-ms: 604800000
+  refresh-cookie-secure: false
+  refresh-cookie-same-site: Lax

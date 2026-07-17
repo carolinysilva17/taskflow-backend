@@ -1,5 +1,7 @@
 # TaskFlow — Backend
 
+[![CI](https://github.com/carolinysilva17/taskflow-backend/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/carolinysilva17/taskflow-backend/actions/workflows/ci.yml)
+
 Sistema moderno de gerenciamento de tarefas, desenvolvido com Spring Boot, React e PostgreSQL. Projeto de estudos simulado como ambiente real de empresa.
 
 ## Tecnologias
