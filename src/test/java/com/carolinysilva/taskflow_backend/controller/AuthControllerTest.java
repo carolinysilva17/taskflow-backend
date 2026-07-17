@@ -59,7 +59,8 @@ class AuthControllerTest {
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/auth/register").contentType("application/json").content(body))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("EMAIL_ALREADY_IN_USE"));
     }
 
     @Test

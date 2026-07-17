@@ -10,8 +10,7 @@ DDL completo em [modelo-dados.sql](modelo-dados.sql).
 | name       | VARCHAR(255) | Não  |              |
 | email      | VARCHAR(255) | Não  | UNIQUE       |
 | password_hash | VARCHAR(255) | Não |             |
-| created_at | TIMESTAMP    | Não  |              |
-| updated_at | TIMESTAMP    | Sim  |              |
+| created_at | TIMESTAMP    | Não  | default `now()` |
 
 ## Tabela `categories`
 
@@ -19,9 +18,7 @@ DDL completo em [modelo-dados.sql](modelo-dados.sql).
 |------------|--------------|------|-------------------------|
 | id         | BIGSERIAL    | Não  | PK                      |
 | name       | VARCHAR(100) | Não  |                         |
-| color      | VARCHAR(20)  | Sim  |                         |
 | user_id    | BIGINT       | Não  | FK -> users(id)         |
-| created_at | TIMESTAMP    | Não  |                         |
 
 ## Tabela `tasks`
 
@@ -31,17 +28,17 @@ DDL completo em [modelo-dados.sql](modelo-dados.sql).
 | title       | VARCHAR(255) | Não          |                            |
 | description | TEXT         | Sim          |                            |
 | status      | VARCHAR(20)  | Não (default 'TODO') |  TODO / IN_PROGRESS / DONE |
-| due_date    | DATE         | Sim          |                            |
+| priority    | VARCHAR(20)  | Não (default 'MEDIUM') | LOW / MEDIUM / HIGH |
 | user_id     | BIGINT       | Não          | FK -> users(id)            |
 | category_id | BIGINT       | **Não**      | FK -> categories(id) — **categoria obrigatória** |
-| created_at  | TIMESTAMP    | Não          |                            |
+| created_at  | TIMESTAMP    | Não          | default `now()`            |
 | updated_at  | TIMESTAMP    | Sim          |                            |
 
 ## Chaves Estrangeiras
 
 - `categories.user_id -> users.id`
 - `tasks.user_id -> users.id`
-- `tasks.category_id -> categories.id` (**NOT NULL**)
+- `tasks.category_id -> categories.id` (**NOT NULL**, `ON DELETE RESTRICT`)
 
 ## Índices
 

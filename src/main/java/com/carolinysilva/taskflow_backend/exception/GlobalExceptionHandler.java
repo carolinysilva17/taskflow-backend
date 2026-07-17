@@ -19,40 +19,41 @@ public class GlobalExceptionHandler {
                 .map(fieldError -> new ErrorResponse.FieldError(fieldError.getField(), fieldError.getDefaultMessage()))
                 .toList();
 
-        return build(HttpStatus.BAD_REQUEST, "Erro de validação", request, fieldErrors);
+        return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Erro de validação", request, fieldErrors);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
-        return build(HttpStatus.NOT_FOUND, ex.getMessage(), request, null);
+        return build(HttpStatus.NOT_FOUND, ex.getErrorCode(), ex.getMessage(), request, null);
     }
 
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ErrorResponse> handleBusinessRule(BusinessRuleException ex, HttpServletRequest request) {
-        return build(HttpStatus.CONFLICT, ex.getMessage(), request, null);
+        return build(HttpStatus.CONFLICT, ex.getErrorCode(), ex.getMessage(), request, null);
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException ex, HttpServletRequest request) {
-        return build(HttpStatus.UNAUTHORIZED, ex.getMessage(), request, null);
+        return build(HttpStatus.UNAUTHORIZED, ex.getErrorCode(), ex.getMessage(), request, null);
     }
 
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ErrorResponse> handleInvalidToken(InvalidTokenException ex, HttpServletRequest request) {
-        return build(HttpStatus.UNAUTHORIZED, ex.getMessage(), request, null);
+        return build(HttpStatus.UNAUTHORIZED, ex.getErrorCode(), ex.getMessage(), request, null);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest request) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno no servidor", request, null);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Erro interno no servidor", request, null);
     }
 
-    private ResponseEntity<ErrorResponse> build(HttpStatus status, String message, HttpServletRequest request,
-                                                 List<ErrorResponse.FieldError> fieldErrors) {
+    private ResponseEntity<ErrorResponse> build(HttpStatus status, String errorCode, String message,
+                                                 HttpServletRequest request, List<ErrorResponse.FieldError> fieldErrors) {
         ErrorResponse body = new ErrorResponse(
                 OffsetDateTime.now(),
                 status.value(),
                 status.getReasonPhrase(),
+                errorCode,
                 message,
                 request.getRequestURI(),
                 fieldErrors

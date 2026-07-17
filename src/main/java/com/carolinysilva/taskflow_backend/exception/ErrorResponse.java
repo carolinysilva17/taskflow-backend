@@ -7,6 +7,7 @@ public record ErrorResponse(
         OffsetDateTime timestamp,
         int status,
         String error,
+        String errorCode,
         String message,
         String path,
         List<FieldError> fieldErrors
