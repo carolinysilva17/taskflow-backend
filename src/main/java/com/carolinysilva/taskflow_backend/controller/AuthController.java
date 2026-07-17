@@ -1,24 +1,28 @@
 package com.carolinysilva.taskflow_backend.controller;
 
-import com.carolinysilva.taskflow_backend.dto.LoginRequest;
-import com.carolinysilva.taskflow_backend.dto.LoginResponse;
-import com.carolinysilva.taskflow_backend.dto.RegisterRequest;
-import com.carolinysilva.taskflow_backend.dto.UserResponse;
-import com.carolinysilva.taskflow_backend.entity.User;
-import com.carolinysilva.taskflow_backend.service.AuthService;
-import com.carolinysilva.taskflow_backend.service.UserService;
-import jakarta.validation.Valid;
+import java.time.Duration;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Duration;
+import com.carolinysilva.taskflow_backend.dto.LoginRequest;
+import com.carolinysilva.taskflow_backend.dto.LoginResponse;
+import com.carolinysilva.taskflow_backend.dto.RefreshResponse;
+import com.carolinysilva.taskflow_backend.dto.RegisterRequest;
+import com.carolinysilva.taskflow_backend.dto.UserResponse;
+import com.carolinysilva.taskflow_backend.entity.User;
+import com.carolinysilva.taskflow_backend.service.AuthService;
+import com.carolinysilva.taskflow_backend.service.UserService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
@@ -55,16 +59,28 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthService.TokenPair tokenPair = authService.login(request.email(), request.password());
 
-        ResponseCookie refreshCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, tokenPair.refreshToken())
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokenPair.refreshToken()).toString())
+                .body(new LoginResponse(tokenPair.accessToken(), UserResponse.from(tokenPair.user())));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshResponse> refresh(
+            @CookieValue(name = REFRESH_TOKEN_COOKIE, required = false) String refreshToken) {
+        AuthService.TokenPair tokenPair = authService.refresh(refreshToken);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokenPair.refreshToken()).toString())
+                .body(new RefreshResponse(tokenPair.accessToken()));
+    }
+
+    private ResponseCookie buildRefreshCookie(String refreshToken) {
+        return ResponseCookie.from(REFRESH_TOKEN_COOKIE, refreshToken)
                 .httpOnly(true)
                 .secure(refreshCookieSecure)
                 .sameSite(refreshCookieSameSite)
                 .path("/auth")
                 .maxAge(Duration.ofMillis(refreshTokenExpirationMs))
                 .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(new LoginResponse(tokenPair.accessToken(), UserResponse.from(tokenPair.user())));
     }
 }
