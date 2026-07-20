@@ -44,7 +44,7 @@ class JwtFilterTest {
     }
 
     @Test
-    void doFilter_naoDeveAutenticar_quandoSemToken() throws Exception {
+    void doFilter_shouldNotAuthenticate_whenNoToken() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -55,11 +55,11 @@ class JwtFilterTest {
     }
 
     @Test
-    void doFilter_naoDeveAutenticar_quandoTokenInvalido() throws Exception {
+    void doFilter_shouldNotAuthenticate_whenTokenIsInvalid() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader("Authorization", "Bearer token-invalido");
+        request.addHeader("Authorization", "Bearer invalid-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtService.isTokenValid("token-invalido")).thenReturn(false);
+        when(jwtService.isTokenValid("invalid-token")).thenReturn(false);
 
         jwtFilter.doFilter(request, response, filterChain);
 
@@ -67,29 +67,29 @@ class JwtFilterTest {
     }
 
     @Test
-    void doFilter_devePopularSecurityContext_quandoTokenValido() throws Exception {
+    void doFilter_shouldPopulateSecurityContext_whenTokenIsValid() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader("Authorization", "Bearer token-valido");
+        request.addHeader("Authorization", "Bearer valid-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtService.isTokenValid("token-valido")).thenReturn(true);
-        when(jwtService.extractSubject("token-valido")).thenReturn("carol@teste.com");
-        when(userRepository.findByEmail("carol@teste.com"))
-                .thenReturn(Optional.of(new User("Carol", "carol@teste.com", "hash")));
+        when(jwtService.isTokenValid("valid-token")).thenReturn(true);
+        when(jwtService.extractSubject("valid-token")).thenReturn("carol@test.com");
+        when(userRepository.findByEmail("carol@test.com"))
+                .thenReturn(Optional.of(new User("Carol", "carol@test.com", "hash")));
 
         jwtFilter.doFilter(request, response, filterChain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
-        assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isEqualTo("carol@teste.com");
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isEqualTo("carol@test.com");
     }
 
     @Test
-    void doFilter_naoDeveAutenticar_quandoUsuarioNaoExisteMaisNoBanco() throws Exception {
+    void doFilter_shouldNotAuthenticate_whenUserNoLongerExistsInDatabase() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader("Authorization", "Bearer token-valido");
+        request.addHeader("Authorization", "Bearer valid-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtService.isTokenValid("token-valido")).thenReturn(true);
-        when(jwtService.extractSubject("token-valido")).thenReturn("carol@teste.com");
-        when(userRepository.findByEmail("carol@teste.com")).thenReturn(Optional.empty());
+        when(jwtService.isTokenValid("valid-token")).thenReturn(true);
+        when(jwtService.extractSubject("valid-token")).thenReturn("carol@test.com");
+        when(userRepository.findByEmail("carol@test.com")).thenReturn(Optional.empty());
 
         jwtFilter.doFilter(request, response, filterChain);
 

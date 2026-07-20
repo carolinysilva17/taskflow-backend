@@ -1,8 +1,7 @@
 package com.carolinysilva.taskflow_backend.security;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 class JwtServiceTest {
 
@@ -13,40 +12,40 @@ class JwtServiceTest {
     private final JwtService jwtService = new JwtService(SECRET, ACCESS_EXPIRATION_MS, REFRESH_EXPIRATION_MS);
 
     @Test
-    void generateAccessToken_deveGerarTokenValidoComSubjectCorreto() {
-        String token = jwtService.generateAccessToken("carol@teste.com");
+    void generateAccessToken_shouldGenerateValidTokenWithCorrectSubject() {
+        String token = jwtService.generateAccessToken("carol@test.com");
 
         assertThat(jwtService.isTokenValid(token)).isTrue();
-        assertThat(jwtService.extractSubject(token)).isEqualTo("carol@teste.com");
+        assertThat(jwtService.extractSubject(token)).isEqualTo("carol@test.com");
     }
 
     @Test
-    void generateRefreshToken_deveGerarTokenValidoComSubjectCorreto() {
-        String token = jwtService.generateRefreshToken("carol@teste.com");
+    void generateRefreshToken_shouldGenerateValidTokenWithCorrectSubject() {
+        String token = jwtService.generateRefreshToken("carol@test.com");
 
         assertThat(jwtService.isTokenValid(token)).isTrue();
-        assertThat(jwtService.extractSubject(token)).isEqualTo("carol@teste.com");
+        assertThat(jwtService.extractSubject(token)).isEqualTo("carol@test.com");
     }
 
     @Test
-    void isTokenValid_deveRetornarFalso_quandoTokenExpirado() {
-        JwtService jwtServiceComExpiracaoCurta = new JwtService(SECRET, -1000L, -1000L);
+    void isTokenValid_shouldReturnFalse_whenTokenIsExpired() {
+        JwtService jwtServiceWithShortExpiration = new JwtService(SECRET, -1000L, -1000L);
 
-        String token = jwtServiceComExpiracaoCurta.generateAccessToken("carol@teste.com");
+        String token = jwtServiceWithShortExpiration.generateAccessToken("carol@test.com");
 
-        assertThat(jwtServiceComExpiracaoCurta.isTokenValid(token)).isFalse();
+        assertThat(jwtServiceWithShortExpiration.isTokenValid(token)).isFalse();
     }
 
     @Test
-    void isTokenValid_deveRetornarFalso_quandoTokenInvalido() {
-        assertThat(jwtService.isTokenValid("token-completamente-invalido")).isFalse();
+    void isTokenValid_shouldReturnFalse_whenTokenIsInvalid() {
+        assertThat(jwtService.isTokenValid("completely-invalid-token")).isFalse();
     }
 
     @Test
-    void isTokenValid_deveRetornarFalso_quandoAssinaturaNaoConfere() {
-        JwtService outroJwtService = new JwtService(
-                "outro-segredo-completamente-diferente-e-com-32-chars", ACCESS_EXPIRATION_MS, REFRESH_EXPIRATION_MS);
-        String token = outroJwtService.generateAccessToken("carol@teste.com");
+    void isTokenValid_shouldReturnFalse_whenSignatureDoesNotMatch() {
+        JwtService anotherJwtService = new JwtService(
+                "another-completely-different-secret-with-32-chars", ACCESS_EXPIRATION_MS, REFRESH_EXPIRATION_MS);
+        String token = anotherJwtService.generateAccessToken("carol@test.com");
 
         assertThat(jwtService.isTokenValid(token)).isFalse();
     }

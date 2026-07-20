@@ -12,24 +12,24 @@ class SecurityConfigTest {
     private final PasswordEncoder passwordEncoder = new SecurityConfig(List.of("http://localhost:5173")).passwordEncoder();
 
     @Test
-    void encode_naoDeveArmazenarSenhaEmTextoPlano() {
-        String hash = passwordEncoder.encode("minhaSenha123");
+    void encode_shouldNotStorePasswordInPlainText() {
+        String hash = passwordEncoder.encode("myPassword123");
 
-        assertThat(hash).isNotEqualTo("minhaSenha123");
+        assertThat(hash).isNotEqualTo("myPassword123");
         assertThat(hash).startsWith("$2");
     }
 
     @Test
-    void matches_deveValidarSenhaCorreta() {
-        String hash = passwordEncoder.encode("minhaSenha123");
+    void matches_shouldValidateCorrectPassword() {
+        String hash = passwordEncoder.encode("myPassword123");
 
-        assertThat(passwordEncoder.matches("minhaSenha123", hash)).isTrue();
+        assertThat(passwordEncoder.matches("myPassword123", hash)).isTrue();
     }
 
     @Test
-    void matches_deveRejeitarSenhaIncorreta() {
-        String hash = passwordEncoder.encode("minhaSenha123");
+    void matches_shouldRejectIncorrectPassword() {
+        String hash = passwordEncoder.encode("myPassword123");
 
-        assertThat(passwordEncoder.matches("senhaErrada", hash)).isFalse();
+        assertThat(passwordEncoder.matches("wrongPassword", hash)).isFalse();
     }
 }
