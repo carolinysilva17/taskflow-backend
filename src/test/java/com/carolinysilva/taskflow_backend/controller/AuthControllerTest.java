@@ -132,6 +132,8 @@ class AuthControllerTest {
         mockMvc.perform(post("/auth/refresh").cookie(refreshCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value(notNullValue()))
+                .andExpect(jsonPath("$.user.email").value("auth-test-refresh@test.com"))
+                .andExpect(jsonPath("$.user.password").doesNotExist())
                 .andExpect(cookie().exists("refreshToken"))
                 .andExpect(cookie().httpOnly("refreshToken", true));
     }

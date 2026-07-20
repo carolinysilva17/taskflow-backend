@@ -71,7 +71,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokenPair.refreshToken(), refreshTokenExpirationMs).toString())
-                .body(new RefreshResponse(tokenPair.accessToken()));
+                .body(new RefreshResponse(tokenPair.accessToken(), UserResponse.from(tokenPair.user())));
     }
 
     @PostMapping("/logout")
