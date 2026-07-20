@@ -31,56 +31,56 @@ class UserServiceTest {
     private UserService userService;
 
     @Test
-    void register_deveSalvarUsuarioComSenhaHasheada_quandoEmailNaoExiste() {
+    void register_shouldSaveUserWithHashedPassword_whenEmailDoesNotExist() {
         userService = new UserService(userRepository, passwordEncoder);
-        when(userRepository.findByEmail("carol@teste.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("minhaSenha123")).thenReturn("hash-gerado");
+        when(userRepository.findByEmail("carol@test.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("myPassword123")).thenReturn("generated-hash");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        User result = userService.register("Carol", "carol@teste.com", "minhaSenha123");
+        User result = userService.register("Carol", "carol@test.com", "myPassword123");
 
-        assertThat(result.getPasswordHash()).isEqualTo("hash-gerado");
+        assertThat(result.getPasswordHash()).isEqualTo("generated-hash");
         verify(userRepository).save(any(User.class));
     }
 
     @Test
-    void register_deveLancarExcecao_quandoEmailJaExiste() {
+    void register_shouldThrowException_whenEmailAlreadyExists() {
         userService = new UserService(userRepository, passwordEncoder);
-        when(userRepository.findByEmail("carol@teste.com"))
-                .thenReturn(Optional.of(new User("Carol", "carol@teste.com", "hash")));
+        when(userRepository.findByEmail("carol@test.com"))
+                .thenReturn(Optional.of(new User("Carol", "carol@test.com", "hash")));
 
-        assertThatThrownBy(() -> userService.register("Carol", "carol@teste.com", "minhaSenha123"))
+        assertThatThrownBy(() -> userService.register("Carol", "carol@test.com", "myPassword123"))
                 .isInstanceOf(BusinessRuleException.class);
     }
 
     @Test
-    void findByEmail_deveLancarExcecao_quandoUsuarioNaoExiste() {
+    void findByEmail_shouldThrowException_whenUserDoesNotExist() {
         userService = new UserService(userRepository, passwordEncoder);
-        when(userRepository.findByEmail("nao-existe@teste.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("does-not-exist@test.com")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.findByEmail("nao-existe@teste.com"))
+        assertThatThrownBy(() -> userService.findByEmail("does-not-exist@test.com"))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
-    void register_deveNormalizarEmail_quandoEmailComEspacoOuMaiuscula() {
+    void register_shouldNormalizeEmail_whenEmailHasSpaceOrUppercase() {
         userService = new UserService(userRepository, passwordEncoder);
-        when(userRepository.findByEmail("carol@teste.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(anyString())).thenReturn("hash-gerado");
+        when(userRepository.findByEmail("carol@test.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(anyString())).thenReturn("generated-hash");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        User result = userService.register("Carol", "  Carol@Teste.com  ", "minhaSenha123");
+        User result = userService.register("Carol", "  Carol@Test.com  ", "myPassword123");
 
-        assertThat(result.getEmail()).isEqualTo("carol@teste.com");
+        assertThat(result.getEmail()).isEqualTo("carol@test.com");
     }
 
     @Test
-    void register_deveLancarExcecao_quandoEmailJaExisteComCasingDiferente() {
+    void register_shouldThrowException_whenEmailAlreadyExistsWithDifferentCasing() {
         userService = new UserService(userRepository, passwordEncoder);
-        when(userRepository.findByEmail("carol@teste.com"))
-                .thenReturn(Optional.of(new User("Carol", "carol@teste.com", "hash")));
+        when(userRepository.findByEmail("carol@test.com"))
+                .thenReturn(Optional.of(new User("Carol", "carol@test.com", "hash")));
 
-        assertThatThrownBy(() -> userService.register("Carol", "CAROL@TESTE.COM", "minhaSenha123"))
+        assertThatThrownBy(() -> userService.register("Carol", "CAROL@TEST.COM", "myPassword123"))
                 .isInstanceOf(BusinessRuleException.class);
     }
 }

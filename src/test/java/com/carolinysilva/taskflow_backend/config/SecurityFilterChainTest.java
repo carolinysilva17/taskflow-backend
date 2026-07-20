@@ -19,19 +19,19 @@ class SecurityFilterChainTest {
     private MockMvc mockMvc;
 
     @Test
-    void rotaProtegida_deveRetornar401_semAutenticacao() throws Exception {
-        mockMvc.perform(get("/qualquer-rota-protegida"))
+    void protectedRoute_shouldReturn401_whenNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/any-protected-route"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void rotaAuth_deveSerAcessivel_semToken() throws Exception {
+    void authRoute_shouldBeAccessible_withoutToken() throws Exception {
         mockMvc.perform(get("/auth/register"))
                 .andExpect(status().is(org.hamcrest.Matchers.not(401)));
     }
 
     @Test
-    void cors_deveLiberarOrigemConfigurada() throws Exception {
+    void cors_shouldAllowConfiguredOrigin() throws Exception {
         mockMvc.perform(options("/auth/login")
                         .header("Origin", "http://localhost:5173")
                         .header("Access-Control-Request-Method", "POST"))
@@ -41,9 +41,9 @@ class SecurityFilterChainTest {
     }
 
     @Test
-    void cors_deveRejeitarOrigemNaoConfigurada() throws Exception {
+    void cors_shouldRejectNonConfiguredOrigin() throws Exception {
         mockMvc.perform(options("/auth/login")
-                        .header("Origin", "http://site-nao-autorizado.com")
+                        .header("Origin", "http://unauthorized-site.com")
                         .header("Access-Control-Request-Method", "POST"))
                 .andExpect(status().isForbidden());
     }

@@ -39,21 +39,21 @@ class AuthControllerTest {
     }
 
     @Test
-    void register_deveRetornar201ComUsuarioSemSenha_quandoDadosValidos() throws Exception {
+    void register_shouldReturn201WithUserWithoutPassword_whenDataIsValid() throws Exception {
         String body = objectMapper.writeValueAsString(
-                new RegisterRequest("Carol", "auth-test-sucesso@teste.com", "senhaForte123"));
+                new RegisterRequest("Carol", "auth-test-success@test.com", "strongPassword123"));
 
         mockMvc.perform(post("/auth/register").contentType("application/json").content(body))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value("auth-test-sucesso@teste.com"))
+                .andExpect(jsonPath("$.email").value("auth-test-success@test.com"))
                 .andExpect(jsonPath("$.createdAt").value(notNullValue()))
                 .andExpect(jsonPath("$.password").doesNotExist());
     }
 
     @Test
-    void register_deveRetornarErro_quandoEmailDuplicado() throws Exception {
+    void register_shouldReturnError_whenEmailIsDuplicated() throws Exception {
         String body = objectMapper.writeValueAsString(
-                new RegisterRequest("Carol", "auth-test-duplicado@teste.com", "senhaForte123"));
+                new RegisterRequest("Carol", "auth-test-duplicate@test.com", "strongPassword123"));
 
         mockMvc.perform(post("/auth/register").contentType("application/json").content(body))
                 .andExpect(status().isCreated());
@@ -64,65 +64,65 @@ class AuthControllerTest {
     }
 
     @Test
-    void register_deveRetornar400_quandoCamposInvalidos() throws Exception {
+    void register_shouldReturn400_whenFieldsAreInvalid() throws Exception {
         String body = objectMapper.writeValueAsString(
-                new RegisterRequest("", "email-invalido", "123"));
+                new RegisterRequest("", "invalid-email", "123"));
 
         mockMvc.perform(post("/auth/register").contentType("application/json").content(body))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void login_deveRetornarAccessTokenNoCorpoERefreshTokenNoCookie_quandoCredenciaisValidas() throws Exception {
+    void login_shouldReturnAccessTokenInBodyAndRefreshTokenInCookie_whenCredentialsAreValid() throws Exception {
         String registerBody = objectMapper.writeValueAsString(
-                new RegisterRequest("Carol", "auth-test-login@teste.com", "senhaForte123"));
+                new RegisterRequest("Carol", "auth-test-login@test.com", "strongPassword123"));
         mockMvc.perform(post("/auth/register").contentType("application/json").content(registerBody))
                 .andExpect(status().isCreated());
 
         String loginBody = objectMapper.writeValueAsString(
-                new LoginRequest("auth-test-login@teste.com", "senhaForte123"));
+                new LoginRequest("auth-test-login@test.com", "strongPassword123"));
 
         mockMvc.perform(post("/auth/login").contentType("application/json").content(loginBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value(notNullValue()))
-                .andExpect(jsonPath("$.user.email").value("auth-test-login@teste.com"))
+                .andExpect(jsonPath("$.user.email").value("auth-test-login@test.com"))
                 .andExpect(jsonPath("$.user.password").doesNotExist())
                 .andExpect(cookie().exists("refreshToken"))
                 .andExpect(cookie().httpOnly("refreshToken", true));
     }
 
     @Test
-    void login_deveRetornar401_quandoSenhaIncorreta() throws Exception {
+    void login_shouldReturn401_whenPasswordIsIncorrect() throws Exception {
         String registerBody = objectMapper.writeValueAsString(
-                new RegisterRequest("Carol", "auth-test-senha-errada@teste.com", "senhaForte123"));
+                new RegisterRequest("Carol", "auth-test-wrong-password@test.com", "strongPassword123"));
         mockMvc.perform(post("/auth/register").contentType("application/json").content(registerBody))
                 .andExpect(status().isCreated());
 
         String loginBody = objectMapper.writeValueAsString(
-                new LoginRequest("auth-test-senha-errada@teste.com", "senhaErrada"));
+                new LoginRequest("auth-test-wrong-password@test.com", "wrongPassword"));
 
         mockMvc.perform(post("/auth/login").contentType("application/json").content(loginBody))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void login_deveRetornar401_quandoEmailNaoExiste() throws Exception {
+    void login_shouldReturn401_whenEmailDoesNotExist() throws Exception {
         String loginBody = objectMapper.writeValueAsString(
-                new LoginRequest("auth-test-nao-existe@teste.com", "qualquerSenha"));
+                new LoginRequest("auth-test-does-not-exist@test.com", "anyPassword"));
 
         mockMvc.perform(post("/auth/login").contentType("application/json").content(loginBody))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void refresh_deveRetornarNovoAccessToken_quandoRefreshTokenValido() throws Exception {
+    void refresh_shouldReturnNewAccessToken_whenRefreshTokenIsValid() throws Exception {
         String registerBody = objectMapper.writeValueAsString(
-                new RegisterRequest("Carol", "auth-test-refresh@teste.com", "senhaForte123"));
+                new RegisterRequest("Carol", "auth-test-refresh@test.com", "strongPassword123"));
         mockMvc.perform(post("/auth/register").contentType("application/json").content(registerBody))
                 .andExpect(status().isCreated());
 
         String loginBody = objectMapper.writeValueAsString(
-                new LoginRequest("auth-test-refresh@teste.com", "senhaForte123"));
+                new LoginRequest("auth-test-refresh@test.com", "strongPassword123"));
         MvcResult loginResult = mockMvc.perform(post("/auth/login").contentType("application/json").content(loginBody))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -137,39 +137,39 @@ class AuthControllerTest {
     }
 
     @Test
-    void refresh_deveRetornarNovoRefreshTokenDiferenteDoAnterior_quandoRefreshTokenValido() throws Exception {
+    void refresh_shouldReturnNewRefreshTokenDifferentFromPrevious_whenRefreshTokenIsValid() throws Exception {
         String registerBody = objectMapper.writeValueAsString(
-                new RegisterRequest("Carol", "auth-test-rotacao@teste.com", "senhaForte123"));
+                new RegisterRequest("Carol", "auth-test-rotation@test.com", "strongPassword123"));
         mockMvc.perform(post("/auth/register").contentType("application/json").content(registerBody))
                 .andExpect(status().isCreated());
 
         String loginBody = objectMapper.writeValueAsString(
-                new LoginRequest("auth-test-rotacao@teste.com", "senhaForte123"));
+                new LoginRequest("auth-test-rotation@test.com", "strongPassword123"));
         MvcResult loginResult = mockMvc.perform(post("/auth/login").contentType("application/json").content(loginBody))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        Cookie refreshCookieOriginal = loginResult.getResponse().getCookie("refreshToken");
+        Cookie originalRefreshCookie = loginResult.getResponse().getCookie("refreshToken");
 
-        MvcResult refreshResult = mockMvc.perform(post("/auth/refresh").cookie(refreshCookieOriginal))
+        MvcResult refreshResult = mockMvc.perform(post("/auth/refresh").cookie(originalRefreshCookie))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        Cookie refreshCookieNovo = refreshResult.getResponse().getCookie("refreshToken");
+        Cookie newRefreshCookie = refreshResult.getResponse().getCookie("refreshToken");
 
         org.junit.jupiter.api.Assertions.assertNotEquals(
-                refreshCookieOriginal.getValue(), refreshCookieNovo.getValue());
+                originalRefreshCookie.getValue(), newRefreshCookie.getValue());
     }
 
     @Test
-    void refresh_deveRetornar401_quandoAccessTokenUsadoNoLugarDoRefreshToken() throws Exception {
+    void refresh_shouldReturn401_whenAccessTokenIsUsedInsteadOfRefreshToken() throws Exception {
         String registerBody = objectMapper.writeValueAsString(
-                new RegisterRequest("Carol", "auth-test-tipo-token@teste.com", "senhaForte123"));
+                new RegisterRequest("Carol", "auth-test-token-type@test.com", "strongPassword123"));
         mockMvc.perform(post("/auth/register").contentType("application/json").content(registerBody))
                 .andExpect(status().isCreated());
 
         String loginBody = objectMapper.writeValueAsString(
-                new LoginRequest("auth-test-tipo-token@teste.com", "senhaForte123"));
+                new LoginRequest("auth-test-token-type@test.com", "strongPassword123"));
         MvcResult loginResult = mockMvc.perform(post("/auth/login").contentType("application/json").content(loginBody))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -182,29 +182,29 @@ class AuthControllerTest {
     }
 
     @Test
-    void refresh_deveRetornar401_quandoSemCookie() throws Exception {
+    void refresh_shouldReturn401_whenNoCookie() throws Exception {
         mockMvc.perform(post("/auth/refresh"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void refresh_deveRetornar401_quandoTokenInvalido() throws Exception {
-        mockMvc.perform(post("/auth/refresh").cookie(new Cookie("refreshToken", "token-completamente-invalido")))
+    void refresh_shouldReturn401_whenTokenIsInvalid() throws Exception {
+        mockMvc.perform(post("/auth/refresh").cookie(new Cookie("refreshToken", "completely-invalid-token")))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void refresh_deveRetornar401_quandoTokenExpirado() throws Exception {
-        JwtService jwtServiceComExpiracaoCurta = new JwtService(
+    void refresh_shouldReturn401_whenTokenIsExpired() throws Exception {
+        JwtService jwtServiceWithShortExpiration = new JwtService(
                 "test-secret-key-with-at-least-32-characters-long", -1000L, -1000L);
-        String tokenExpirado = jwtServiceComExpiracaoCurta.generateRefreshToken("auth-test-refresh@teste.com");
+        String expiredToken = jwtServiceWithShortExpiration.generateRefreshToken("auth-test-refresh@test.com");
 
-        mockMvc.perform(post("/auth/refresh").cookie(new Cookie("refreshToken", tokenExpirado)))
+        mockMvc.perform(post("/auth/refresh").cookie(new Cookie("refreshToken", expiredToken)))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void logout_deveLimparCookieRefreshToken_mesmoSemCookiePresente() throws Exception {
+    void logout_shouldClearRefreshTokenCookie_evenWithoutCookiePresent() throws Exception {
         mockMvc.perform(post("/auth/logout"))
                 .andExpect(status().isOk())
                 .andExpect(cookie().maxAge("refreshToken", 0));
