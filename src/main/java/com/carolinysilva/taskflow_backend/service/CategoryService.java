@@ -32,13 +32,32 @@ public class CategoryService {
 
     public CategoryResponse create(String userEmail, CategoryRequest request) {
         User user = userService.findByEmail(userEmail);
-        Category category = new Category(request.name().trim(), request.color(), user);
+        String name = request.name().trim();
+
+        if (categoryRepository.existsByUserIdAndNameIgnoreCase(user.getId(), name)) {
+            throw new BusinessRuleException("CATEGORY_NAME_DUPLICATE", "Já existe uma categoria com esse nome");
+        }
+        if (categoryRepository.existsByUserIdAndColorIgnoreCase(user.getId(), request.color())) {
+            throw new BusinessRuleException("CATEGORY_COLOR_DUPLICATE", "Já existe uma categoria com essa cor");
+        }
+
+        Category category = new Category(name, request.color(), user);
         return CategoryResponse.from(categoryRepository.save(category));
     }
 
     public CategoryResponse update(String userEmail, Long categoryId, CategoryRequest request) {
         Category category = getOwnedCategory(userEmail, categoryId);
-        category.setName(request.name().trim());
+        String name = request.name().trim();
+        Long userId = category.getUser().getId();
+
+        if (categoryRepository.existsByUserIdAndNameIgnoreCaseAndIdNot(userId, name, categoryId)) {
+            throw new BusinessRuleException("CATEGORY_NAME_DUPLICATE", "Já existe uma categoria com esse nome");
+        }
+        if (categoryRepository.existsByUserIdAndColorIgnoreCaseAndIdNot(userId, request.color(), categoryId)) {
+            throw new BusinessRuleException("CATEGORY_COLOR_DUPLICATE", "Já existe uma categoria com essa cor");
+        }
+
+        category.setName(name);
         category.setColor(request.color());
         return CategoryResponse.from(categoryRepository.save(category));
     }
