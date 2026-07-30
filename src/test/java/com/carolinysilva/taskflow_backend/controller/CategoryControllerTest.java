@@ -152,6 +152,17 @@ class CategoryControllerTest {
     }
 
     @Test
+    void update_shouldReturn400_whenIdIsNotANumber() throws Exception {
+        String token = registerAndLogin("category-test-update-invalid-id@test.com");
+        String body = objectMapper.writeValueAsString(new CategoryRequest("Trabalho", "#4CAF50"));
+
+        mockMvc.perform(put("/categories/abc")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType("application/json").content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void update_shouldReturn404_whenCategoryDoesNotBelongToUser() throws Exception {
         String tokenOwner = registerAndLogin("category-test-update-owner@test.com");
         String tokenOther = registerAndLogin("category-test-update-other@test.com");
