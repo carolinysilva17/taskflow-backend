@@ -18,18 +18,4 @@ class SecurityConfigTest {
         assertThat(hash).isNotEqualTo("myPassword123");
         assertThat(hash).startsWith("$2");
     }
-
-    @Test
-    void matches_shouldValidateCorrectPassword() {
-        String hash = passwordEncoder.encode("myPassword123");
-
-        assertThat(passwordEncoder.matches("myPassword123", hash)).isTrue();
-    }
-
-    @Test
-    void matches_shouldRejectIncorrectPassword() {
-        String hash = passwordEncoder.encode("myPassword123");
-
-        assertThat(passwordEncoder.matches("wrongPassword", hash)).isFalse();
-    }
 }

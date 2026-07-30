@@ -47,4 +47,10 @@ class SecurityFilterChainTest {
                         .header("Access-Control-Request-Method", "POST"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void cors_shouldNotAllowNonConfiguredOrigin_onActualRequest() throws Exception {
+        mockMvc.perform(get("/auth/register").header("Origin", "http://unauthorized-site.com"))
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+    }
 }
