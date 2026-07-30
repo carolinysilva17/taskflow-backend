@@ -10,6 +10,7 @@ import com.carolinysilva.taskflow_backend.repository.CategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -57,20 +58,7 @@ class CategoryServiceTest {
     }
 
     @Test
-    void create_shouldSaveCategoryLinkedToAuthenticatedUser() {
-        when(userService.findByEmail("carol@test.com")).thenReturn(user);
-        when(categoryRepository.existsByUserIdAndNameIgnoreCase(1L, "Trabalho")).thenReturn(false);
-        when(categoryRepository.existsByUserIdAndColorIgnoreCase(1L, "#4CAF50")).thenReturn(false);
-        when(categoryRepository.save(any(Category.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        CategoryResponse result = categoryService.create("carol@test.com", new CategoryRequest("Trabalho", "#4CAF50"));
-
-        assertThat(result.name()).isEqualTo("Trabalho");
-        assertThat(result.color()).isEqualTo("#4CAF50");
-    }
-
-    @Test
-    void create_shouldTrimName() {
+    void create_shouldSaveCategoryLinkedToAuthenticatedUser_andTrimName() {
         when(userService.findByEmail("carol@test.com")).thenReturn(user);
         when(categoryRepository.existsByUserIdAndNameIgnoreCase(1L, "Trabalho")).thenReturn(false);
         when(categoryRepository.existsByUserIdAndColorIgnoreCase(1L, "#4CAF50")).thenReturn(false);
@@ -79,6 +67,11 @@ class CategoryServiceTest {
         CategoryResponse result = categoryService.create("carol@test.com", new CategoryRequest("  Trabalho  ", "#4CAF50"));
 
         assertThat(result.name()).isEqualTo("Trabalho");
+        assertThat(result.color()).isEqualTo("#4CAF50");
+
+        ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
+        verify(categoryRepository).save(captor.capture());
+        assertThat(captor.getValue().getUser()).isEqualTo(user);
     }
 
     @Test
@@ -149,6 +142,21 @@ class CategoryServiceTest {
         when(categoryRepository.findById(10L)).thenReturn(Optional.of(category));
         when(userService.findByEmail("carol@test.com")).thenReturn(user);
         when(categoryRepository.existsByUserIdAndNameIgnoreCaseAndIdNot(1L, "Estudos", 10L)).thenReturn(true);
+
+        assertThatThrownBy(() -> categoryService.update("carol@test.com", 10L, new CategoryRequest("Estudos", "#2196F3")))
+                .isInstanceOf(BusinessRuleException.class);
+        verify(categoryRepository, never()).save(any());
+    }
+
+    @Test
+    void update_shouldThrowException_whenColorIsDuplicatedForSameUser() {
+        Category category = new Category("Trabalho", "#4CAF50", user);
+        ReflectionTestUtils.setField(category, "id", 10L);
+
+        when(categoryRepository.findById(10L)).thenReturn(Optional.of(category));
+        when(userService.findByEmail("carol@test.com")).thenReturn(user);
+        when(categoryRepository.existsByUserIdAndNameIgnoreCaseAndIdNot(1L, "Estudos", 10L)).thenReturn(false);
+        when(categoryRepository.existsByUserIdAndColorIgnoreCaseAndIdNot(1L, "#2196F3", 10L)).thenReturn(true);
 
         assertThatThrownBy(() -> categoryService.update("carol@test.com", 10L, new CategoryRequest("Estudos", "#2196F3")))
                 .isInstanceOf(BusinessRuleException.class);
