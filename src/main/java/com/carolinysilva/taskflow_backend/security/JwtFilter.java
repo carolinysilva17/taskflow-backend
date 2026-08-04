@@ -19,10 +19,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final TokenRevocationList tokenRevocationList;
 
-    public JwtFilter(JwtService jwtService, UserRepository userRepository) {
+    public JwtFilter(JwtService jwtService, UserRepository userRepository, TokenRevocationList tokenRevocationList) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.tokenRevocationList = tokenRevocationList;
     }
 
     @Override
@@ -30,7 +32,8 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String token = extractToken(request);
 
-        if (token != null && jwtService.isTokenValid(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (token != null && jwtService.isAccessToken(token) && !tokenRevocationList.isRevoked(jwtService.extractId(token))
+                && SecurityContextHolder.getContext().getAuthentication() == null) {
             String email = jwtService.extractSubject(token);
 
             userRepository.findByEmail(email).ifPresent(user -> {

@@ -19,6 +19,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.carolinysilva.taskflow_backend.repository.UserRepository;
 import com.carolinysilva.taskflow_backend.security.JwtFilter;
 import com.carolinysilva.taskflow_backend.security.JwtService;
+import com.carolinysilva.taskflow_backend.security.TokenRevocationList;
 
 @Configuration
 public class SecurityConfig {
@@ -35,9 +36,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService, UserRepository userRepository)
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http, JwtService jwtService, UserRepository userRepository, TokenRevocationList tokenRevocationList)
             throws Exception {
-        JwtFilter jwtFilter = new JwtFilter(jwtService, userRepository);
+        JwtFilter jwtFilter = new JwtFilter(jwtService, userRepository, tokenRevocationList);
 
         http
                 .csrf(csrf -> csrf.disable())

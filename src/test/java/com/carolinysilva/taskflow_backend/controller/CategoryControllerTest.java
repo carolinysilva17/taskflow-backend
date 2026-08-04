@@ -112,6 +112,17 @@ class CategoryControllerTest {
     }
 
     @Test
+    void create_shouldReturn400_whenNameExceedsMaxLength() throws Exception {
+        String token = registerAndLogin("category-test-create-long-name@test.com");
+        String body = objectMapper.writeValueAsString(new CategoryRequest("a".repeat(101), "#4CAF50"));
+
+        mockMvc.perform(post("/categories")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType("application/json").content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void create_shouldReturn409_whenNameIsDuplicatedForSameUser() throws Exception {
         String token = registerAndLogin("category-test-dup-name@test.com");
         createCategory(token, "Trabalho", "#4CAF50");

@@ -49,4 +49,32 @@ class JwtServiceTest {
 
         assertThat(jwtService.isTokenValid(token)).isFalse();
     }
+
+    @Test
+    void isAccessToken_shouldReturnTrue_forAccessToken() {
+        String token = jwtService.generateAccessToken("carol@test.com");
+
+        assertThat(jwtService.isAccessToken(token)).isTrue();
+    }
+
+    @Test
+    void isAccessToken_shouldReturnFalse_forRefreshToken() {
+        String token = jwtService.generateRefreshToken("carol@test.com");
+
+        assertThat(jwtService.isAccessToken(token)).isFalse();
+    }
+
+    @Test
+    void isRefreshToken_shouldReturnFalse_forAccessToken() {
+        String token = jwtService.generateAccessToken("carol@test.com");
+
+        assertThat(jwtService.isRefreshToken(token)).isFalse();
+    }
+
+    @Test
+    void isRefreshToken_shouldReturnTrue_forRefreshToken() {
+        String token = jwtService.generateRefreshToken("carol@test.com");
+
+        assertThat(jwtService.isRefreshToken(token)).isTrue();
+    }
 }

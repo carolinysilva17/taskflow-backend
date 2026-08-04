@@ -1,15 +1,10 @@
 package com.carolinysilva.taskflow_backend.exception;
 
-public class InvalidTokenException extends RuntimeException {
+import org.springframework.http.HttpStatus;
 
-    private final String errorCode;
+public class InvalidTokenException extends ApiException {
 
     public InvalidTokenException(String errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
-    }
-
-    public String getErrorCode() {
-        return errorCode;
+        super(HttpStatus.UNAUTHORIZED, errorCode, message);
     }
 }

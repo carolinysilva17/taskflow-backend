@@ -1,15 +1,10 @@
 package com.carolinysilva.taskflow_backend.exception;
 
-public class InvalidCredentialsException extends RuntimeException {
+import org.springframework.http.HttpStatus;
 
-    private final String errorCode;
+public class InvalidCredentialsException extends ApiException {
 
     public InvalidCredentialsException(String errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
-    }
-
-    public String getErrorCode() {
-        return errorCode;
+        super(HttpStatus.UNAUTHORIZED, errorCode, message);
     }
 }
