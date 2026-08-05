@@ -3,6 +3,7 @@ package com.carolinysilva.taskflow_backend.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -27,24 +28,16 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Erro de validação", request, fieldErrors);
     }
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
-        return build(HttpStatus.NOT_FOUND, ex.getErrorCode(), ex.getMessage(), request, null);
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ErrorResponse> handleApiException(ApiException ex, HttpServletRequest request) {
+        return build(ex.getHttpStatus(), ex.getErrorCode(), ex.getMessage(), request, null);
     }
 
-    @ExceptionHandler(BusinessRuleException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessRule(BusinessRuleException ex, HttpServletRequest request) {
-        return build(HttpStatus.CONFLICT, ex.getErrorCode(), ex.getMessage(), request, null);
-    }
-
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException ex, HttpServletRequest request) {
-        return build(HttpStatus.UNAUTHORIZED, ex.getErrorCode(), ex.getMessage(), request, null);
-    }
-
-    @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidToken(InvalidTokenException ex, HttpServletRequest request) {
-        return build(HttpStatus.UNAUTHORIZED, ex.getErrorCode(), ex.getMessage(), request, null);
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
+        logger.warn("Data integrity violation in {} {}", request.getMethod(), request.getRequestURI(), ex);
+        return build(HttpStatus.CONFLICT, "DATA_CONFLICT",
+                "Os dados enviados conflitam com um registro existente", request, null);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

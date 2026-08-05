@@ -20,3 +20,11 @@ jwt:
 
 cors:
   allowed-origins: http://localhost:5173
+
+rate-limit:
+  login:
+    max-attempts: 100000
+    window-minutes: 1
+  register:
+    max-attempts: 100000
+    window-minutes: 1

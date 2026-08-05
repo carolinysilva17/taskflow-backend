@@ -31,11 +31,14 @@ class JwtFilterTest {
     @Mock
     private FilterChain filterChain;
 
+    @Mock
+    private TokenRevocationList tokenRevocationList;
+
     private JwtFilter jwtFilter;
 
     @BeforeEach
     void setUp() {
-        jwtFilter = new JwtFilter(jwtService, userRepository);
+        jwtFilter = new JwtFilter(jwtService, userRepository, tokenRevocationList);
     }
 
     @AfterEach
@@ -59,7 +62,7 @@ class JwtFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer invalid-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtService.isTokenValid("invalid-token")).thenReturn(false);
+        when(jwtService.isAccessToken("invalid-token")).thenReturn(false);
 
         jwtFilter.doFilter(request, response, filterChain);
 
@@ -71,7 +74,7 @@ class JwtFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer valid-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtService.isTokenValid("valid-token")).thenReturn(true);
+        when(jwtService.isAccessToken("valid-token")).thenReturn(true);
         when(jwtService.extractSubject("valid-token")).thenReturn("carol@test.com");
         when(userRepository.findByEmail("carol@test.com"))
                 .thenReturn(Optional.of(new User("Carol", "carol@test.com", "hash")));
@@ -87,7 +90,7 @@ class JwtFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer valid-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtService.isTokenValid("valid-token")).thenReturn(true);
+        when(jwtService.isAccessToken("valid-token")).thenReturn(true);
         when(jwtService.extractSubject("valid-token")).thenReturn("carol@test.com");
         when(userRepository.findByEmail("carol@test.com")).thenReturn(Optional.empty());
 
@@ -95,4 +98,5 @@ class JwtFilterTest {
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
+
 }

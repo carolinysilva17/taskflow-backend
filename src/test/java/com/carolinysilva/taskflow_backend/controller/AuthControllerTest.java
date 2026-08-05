@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -69,6 +70,24 @@ class AuthControllerTest {
                 new RegisterRequest("", "invalid-email", "123"));
 
         mockMvc.perform(post("/auth/register").contentType("application/json").content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void register_shouldReturn400_whenPasswordExceedsMaxLength() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                new RegisterRequest("Carol", "auth-test-long-password@test.com", "a".repeat(73)));
+
+        mockMvc.perform(post("/auth/register").contentType("application/json").content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void login_shouldReturn400_whenPasswordExceedsMaxLength() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                new LoginRequest("auth-test-long-password@test.com", "a".repeat(73)));
+
+        mockMvc.perform(post("/auth/login").contentType("application/json").content(body))
                 .andExpect(status().isBadRequest());
     }
 
@@ -210,5 +229,78 @@ class AuthControllerTest {
         mockMvc.perform(post("/auth/logout"))
                 .andExpect(status().isOk())
                 .andExpect(cookie().maxAge("refreshToken", 0));
+    }
+
+    @Test
+    void logout_shouldRevokeAccessToken_soItCannotBeUsedAgain() throws Exception {
+        String registerBody = objectMapper.writeValueAsString(
+                new RegisterRequest("Carol", "auth-test-logout-access@test.com", "strongPassword123"));
+        mockMvc.perform(post("/auth/register").contentType("application/json").content(registerBody))
+                .andExpect(status().isCreated());
+
+        String loginBody = objectMapper.writeValueAsString(
+                new LoginRequest("auth-test-logout-access@test.com", "strongPassword123"));
+        MvcResult loginResult = mockMvc.perform(post("/auth/login").contentType("application/json").content(loginBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String responseBody = loginResult.getResponse().getContentAsString();
+        String accessToken = objectMapper.readTree(responseBody).get("accessToken").asString();
+        Cookie refreshCookie = loginResult.getResponse().getCookie("refreshToken");
+
+        mockMvc.perform(get("/categories").header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/auth/logout")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .cookie(refreshCookie))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/categories").header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void logout_shouldRevokeRefreshToken_soItCannotBeUsedToRefreshAgain() throws Exception {
+        String registerBody = objectMapper.writeValueAsString(
+                new RegisterRequest("Carol", "auth-test-logout-refresh@test.com", "strongPassword123"));
+        mockMvc.perform(post("/auth/register").contentType("application/json").content(registerBody))
+                .andExpect(status().isCreated());
+
+        String loginBody = objectMapper.writeValueAsString(
+                new LoginRequest("auth-test-logout-refresh@test.com", "strongPassword123"));
+        MvcResult loginResult = mockMvc.perform(post("/auth/login").contentType("application/json").content(loginBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Cookie refreshCookie = loginResult.getResponse().getCookie("refreshToken");
+
+        mockMvc.perform(post("/auth/logout").cookie(refreshCookie))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/auth/refresh").cookie(refreshCookie))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refresh_shouldReturn401_whenTheSameRefreshTokenIsUsedTwice() throws Exception {
+        String registerBody = objectMapper.writeValueAsString(
+                new RegisterRequest("Carol", "auth-test-refresh-reuse@test.com", "strongPassword123"));
+        mockMvc.perform(post("/auth/register").contentType("application/json").content(registerBody))
+                .andExpect(status().isCreated());
+
+        String loginBody = objectMapper.writeValueAsString(
+                new LoginRequest("auth-test-refresh-reuse@test.com", "strongPassword123"));
+        MvcResult loginResult = mockMvc.perform(post("/auth/login").contentType("application/json").content(loginBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Cookie refreshCookie = loginResult.getResponse().getCookie("refreshToken");
+
+        mockMvc.perform(post("/auth/refresh").cookie(refreshCookie))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/auth/refresh").cookie(refreshCookie))
+                .andExpect(status().isUnauthorized());
     }
 }

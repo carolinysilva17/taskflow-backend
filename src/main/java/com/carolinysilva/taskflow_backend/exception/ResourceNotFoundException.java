@@ -1,15 +1,10 @@
 package com.carolinysilva.taskflow_backend.exception;
 
-public class ResourceNotFoundException extends RuntimeException {
+import org.springframework.http.HttpStatus;
 
-    private final String errorCode;
+public class ResourceNotFoundException extends ApiException {
 
     public ResourceNotFoundException(String errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
-    }
-
-    public String getErrorCode() {
-        return errorCode;
+        super(HttpStatus.NOT_FOUND, errorCode, message);
     }
 }
